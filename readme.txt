@@ -3,7 +3,7 @@ Contributors: coffee2code
 Donate link: http://coffee2code.com/donate
 Tags: posts, navigation, links, next, previous, portfolio, previous_post_link, next_post_link, coffee2code
 Requires at least: 2.6
-Tested up to: 3.2
+Tested up to: 3.2.1
 Stable tag: 1.6.1
 Version: 1.6.1
 
