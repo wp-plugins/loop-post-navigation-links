@@ -107,7 +107,7 @@ Like WordPress's `previous_post_link()`, this function displays a link to the pr
 == Upgrade Notice ==
 
 = 1.6.1 =
-Trivial update: noted compatibility through WP 3.1+ and updated copyright date
+Trivial update: noted compatibility through WP 3.2+ and updated copyright date
 
 = 1.6 =
 Minor update. Highlights: adds 'rel=' attribute to links; minor tweaks; verified WP 3.0 compatibility.
