@@ -1,105 +1,224 @@
 <?php
+/**
+ * @package Loop_Post_Navigation_Links
+ * @author Scott Reilly
+ * @version 2.0
+ */
 /*
 Plugin Name: Loop Post Navigation Links
-Version: 1.5
-Plugin URI: http://coffee2code.com/wp-plugins/loop-post-navigation-links
+Version: 2.0
+Plugin URI: http://coffee2code.com/wp-plugins/loop-post-navigation-links/
 Author: Scott Reilly
-Author URI: http://coffee2code.com
-Description: Template tags (for use in single.php) to create post navigation loop (previous to first post is last post; next/after last post is first post).
+Author URI: http://coffee2code.com/
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Description: Template tags (for single.php) to create post navigation loop (previous to first post is last post; next/after last post is first post).
 
-next_or_loop_post_link() is identical to WordPress's next_post_link() in every way except when called on the last
-post in the navigation sequence, in which case it links back to the first post in the navigation sequence.
+Compatible with WordPress 2.6 through 3.5+.
 
-previous_or_loop_post_link()` is identical to WordPress's `previous_post_link()` in every way except when called on
-the first post in the navigation sequence, in which case it links back to the last post in the navigation sequence.
+=>> Read the accompanying readme.txt file for instructions and documentation.
+=>> Also, visit the plugin's homepage for additional information and updates.
+=>> Or visit: http://wordpress.org/extend/plugins/loop-post-navigation-links/
 
-Useful for providing a looping link of posts, such as for a portfolio, or to continually present pertinent posts for
-visitors to continue reading.
-
-Compatible with WordPress 2.6+, 2.7+, 2.8+.
-
-=>> Read the accompanying readme.txt file for more information.  Also, visit the plugin's homepage
-=>> for more information and the latest updates
-
-Installation:
-
-1. Download the file http://coffee2code.com/wp-plugins/loop-post-navigation-links.zip and unzip it into your 
-/wp-content/plugins/ directory.
-2. Activate the plugin through the 'Plugins' admin menu in WordPress
-3. Use next_or_loop_post_link() template tag instead of next_post_link(), and/or previous_or_loop_post_link() template tag
-instead of previous_post_link(), in your single-post template (single.php).
-
+TODO
+	* Switch adjacent_or_loop_post_link() away from using global $post and use get_post() instead. (Drop pre-3.5 support in doing so)
 */
 
 /*
-Copyright (c) 2008-2009 by Scott Reilly (aka coffee2code)
+	Copyright (c) 2008-2013 by Scott Reilly (aka coffee2code)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation 
-files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, 
-modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
+
+defined( 'ABSPATH' ) or die();
+
+global $c2c_loop_navigation_find;
 $c2c_loop_navigation_find = false;
 
-function next_or_loop_post_link( $format='%link &raquo;', $link='%title', $in_same_cat = false, $excluded_categories = '' ) {
-	adjacent_or_loop_post_link($format, $link, $in_same_cat, $excluded_categories, false);
+if ( ! function_exists( 'c2c_next_or_loop_post_link' ) ) :
+/**
+ * Display next post link that is adjacent to the current post, or if none, then
+ * the first post in the series.
+ *
+ * @since 2.0
+ *
+ * @param string $format (optional) Link anchor format. Default is '%link &raquo;'.
+ * @param string $link (optional) Link permalink format. Default is '%title'.
+ * @param bool $in_same_cat (optional) Whether link should be in same category. Default is false.
+ * @param string $excluded_categories (optional) Excluded categories IDs. Default is ''.
+ * @return void
+ */
+function c2c_next_or_loop_post_link( $format='%link &raquo;', $link='%title', $in_same_cat = false, $excluded_categories = '' ) {
+	c2c_adjacent_or_loop_post_link( $format, $link, $in_same_cat, $excluded_categories, false );
 }
+add_action( 'c2c_next_or_loop_post_link', 'c2c_next_or_loop_post_link', 10, 4 );
+endif;
 
-function previous_or_loop_post_link( $format='&laquo; %link', $link='%title', $in_same_cat = false, $excluded_categories = '' ) {
-	adjacent_or_loop_post_link($format, $link, $in_same_cat, $excluded_categories, true);
+if ( ! function_exists( 'c2c_previous_or_loop_post_link' ) ) :
+/**
+ * Display previous post link that is adjacent to the current post, or if none,
+ * then the last post in the series.
+ *
+ * @since 2.0
+ *
+ * @param string $format (optional) Link anchor format. Default is '&laquo; %link'.
+ * @param string $link (optional) Link permalink format. Default is '%title'.
+ * @param bool $in_same_cat (optional) Whether link should be in same category. Default is false.
+ * @param string $excluded_categories (optional) Excluded categories IDs. Default is ''.
+ * @return void
+ */
+function c2c_previous_or_loop_post_link( $format='&laquo; %link', $link='%title', $in_same_cat = false, $excluded_categories = '' ) {
+	c2c_adjacent_or_loop_post_link( $format, $link, $in_same_cat, $excluded_categories, true );
 }
+add_action( 'c2c_previous_or_loop_post_link', 'c2c_previous_or_loop_post_link', 10, 4 );
+endif;
 
-function adjacent_or_loop_post_link( $format, $link, $in_same_cat = false, $excluded_categories = '', $previous = true ) {
-	if ( $previous && is_attachment() )
-		$post = & get_post($GLOBALS['post']->post_parent);
+if ( ! function_exists( 'c2c_adjacent_or_loop_post_link' ) ) :
+/**
+ * Display adjacent post link or the post link for the post at the opposite end of the series.
+ *
+ * Can be either next post link or previous.
+ *
+ * @param string $format Link anchor format.
+ * @param string $link Link permalink format.
+ * @param bool $in_same_cat (optional) Whether link should be in same category. Default is false.
+ * @param string $excluded_categories (optional) Excluded categories IDs. Default is ''.
+ * @param bool $previous (optional) Whether to display link to previous post. Default is true.
+ * @return void
+ */
+function c2c_adjacent_or_loop_post_link( $format, $link, $in_same_cat = false, $excluded_categories = '', $previous = true ) {
+	if ( $previous && is_attachment() && is_object( $GLOBALS['post'] ) )
+		$post = get_post( $GLOBALS['post']->post_parent );
 	else
-		$post = get_adjacent_post($in_same_cat, $excluded_categories, $previous);
+		$post = get_adjacent_post( $in_same_cat, $excluded_categories, $previous );
 
-	// The only modification of adjacent_post_link() -- get the last/first post if there isn't a legitimate previous/next post
-	if ( !$post ) {
+	// START The only modification of adjacent_post_link() -- get the last/first post if there isn't a legitimate previous/next post
+	if ( ! $post ) {
 		global $c2c_loop_navigation_find;
 		$c2c_loop_navigation_find = true;
-		$post = get_adjacent_post($in_same_cat, $excluded_categories, $previous);
+		$post = get_adjacent_post( $in_same_cat, $excluded_categories, $previous );
 		$c2c_loop_navigation_find = false;
 	}
+	// END modification
 
-	if ( !$post )
-		return;
+	if ( ! $post ) {
+		$output = '';
+	} else {
+		$title = $post->post_title;
 
-	$title = $post->post_title;
+		if ( empty( $post->post_title ) )
+			$title = $previous ? __( 'Previous Post' ) : __( 'Next Post' );
 
-	if ( empty($post->post_title) )
-		$title = $previous ? __('Previous Post') : __('Next Post');
+		$title = apply_filters( 'the_title', $title, $post->ID );
+		$date = mysql2date( get_option( 'date_format' ), $post->post_date );
+		$rel = $previous ? 'prev' : 'next';
 
-	$title = apply_filters('the_title', $title, $post);
-	$date = mysql2date(get_option('date_format'), $post->post_date);
+		$string = '<a href="' . get_permalink( $post ) . '" rel="' . $rel . '">';
+		$link = str_replace( '%title', $title, $link );
+		$link = str_replace( '%date', $date, $link );
+		$link = $string . $link . '</a>';
 
-	$string = '<a href="'.get_permalink($post).'">';
-	$link = str_replace('%title', $title, $link);
-	$link = str_replace('%date', $date, $link);
-	$link = $string . $link . '</a>';
-
-	$format = str_replace('%link', $link, $format);
+		$output = str_replace( '%link', $link, $format );
+	}
 
 	$adjacent = $previous ? 'previous' : 'next';
-	echo apply_filters("{$adjacent}_or_loop_post_link", apply_filters("{$adjacent}_post_link", $format, $link), $format, $link);
-}
 
+	// Apply the filters present in WP's adjacent_or_loop_post_link()
+	$output = apply_filters( "{$adjacent}_post_link", $output, $format, $link, $post );
+
+	// Apply old {$adjacent}_or_loop_post_link filters.
+	// Deprecated as of v2.0. Here temporarily for backwards compatibility.
+	$output = apply_filters( "{$adjacent}_or_loop_post_link", $output, $format, $link, $post );
+
+	// Apply custom filters and echo
+	echo apply_filters( "c2c_{$adjacent}_or_loop_post_link_output", $output, $format, $link, $post );
+}
+add_action( 'c2c_adjacent_or_loop_post_link', 'c2c_previous_or_loop_post_link', 10, 5 );
+endif;
+
+if ( ! function_exists( 'c2c_modify_nextprevious_post_where' ) ) :
+/**
+ * Modifies the SQL WHERE clause used by WordPress when getting a previous/next post to accommodate looping navigation.
+ *
+ * Can be either next post link or previous.
+ *
+ * @param string $where SQL WHERE clause generated by WordPress
+ * @param string $link Link permalink format.
+ * @param bool $in_same_cat (optional) Whether link should be in same category. Default is false.
+ * @param string $excluded_categories (optional) Excluded categories IDs. Default is ''.
+ * @param bool $previous (optional) Whether to display link to previous post. Default is true.
+ * @return void
+ */
 function c2c_modify_nextprevious_post_where( $where ) {
 	// The incoming WHERE statement generated by WordPress is a condition for the date, relative to the current
 	//	post's date.  To find the post we want, we just need to get rid of that condition (which is the first) and retain the others.
 	if ( $GLOBALS['c2c_loop_navigation_find'] )
-		$where = preg_replace('/WHERE (.+) AND/imsU', 'WHERE', $where);
+		$where = preg_replace( '/WHERE (.+) AND/imsU', 'WHERE', $where );
 	return $where;
 }
-add_filter('get_next_post_where', 'c2c_modify_nextprevious_post_where');
-add_filter('get_previous_post_where', 'c2c_modify_nextprevious_post_where');
-?>
+endif;
+
+/*
+ * Register actions to filter WHERE clause when previous or next post query is being processed.
+ */
+add_filter( 'get_next_post_where',     'c2c_modify_nextprevious_post_where' );
+add_filter( 'get_previous_post_where', 'c2c_modify_nextprevious_post_where' );
+
+
+/*****
+ * DEPRECATED FUNCTIONS
+ *****/
+
+if ( ! function_exists( 'next_or_loop_post_link' ) ) :
+	/**
+	 * Display next post link that is adjacent to the current post, or if none,
+	 * then the first post in the series.
+	 *
+	 * @since 1.0
+	 * @deprecated 2.0 Use c2c_next_or_loop_post_link() instead
+	 */
+	function next_or_loop_post_link( $format='%link &raquo;', $link='%title', $in_same_cat = false, $excluded_categories = '' ) {
+		_deprecated_function( 'next_or_loop_post_link', '2.0', 'c2c_next_or_loop_post_link' );
+		return c2c_next_or_loop_post_link( $format, $link, $in_same_cat, $excluded_categories );
+	}
+endif;
+
+if ( ! function_exists( 'previous_or_loop_post_link' ) ) :
+	/**
+	 * Display previous post link that is adjacent to the current post, or if
+	 * none, then the last post in the series.
+	 *
+	 * @since 1.0
+	 * @deprecated 2.0 Use c2c_previous_or_loop_post_link() instead
+	 */
+	function previous_or_loop_post_link( $format='&laquo; %link', $link='%title', $in_same_cat = false, $excluded_categories = '' ) {
+		_deprecated_function( 'previous_or_loop_post_link', '2.0', 'c2c_previous_or_loop_post_link' );
+		return c2c_previous_or_loop_post_link( $format, $link, $in_same_cat, $excluded_categories );
+	}
+endif;
+
+if ( ! function_exists( 'adjacent_or_loop_post_link' ) ) :
+	/**
+	 * Display previous post link that is adjacent to the current post, or if
+	 * none, then the last post in the series.
+	 *
+	 * @since 1.0
+	 * @deprecated 2.0 Use c2c_adjacent_or_loop_post_link() instead
+	 */
+	function adjacent_or_loop_post_link( $format, $link, $in_same_cat = false, $excluded_categories = '', $previous = true ) {
+		_deprecated_function( 'adjacent_or_loop_post_link', '2.0', 'c2c_adjacent_or_loop_post_link' );
+		return c2c_adjacent_or_loop_post_link( $format, $link, $in_same_cat, $excluded_categories, $previous );
+	}
+endif;
